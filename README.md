@@ -1,2 +1,2 @@
 # BQSwiftTool
-Tools for Foundation, UIKit
+Tools for Foundation, Strings
