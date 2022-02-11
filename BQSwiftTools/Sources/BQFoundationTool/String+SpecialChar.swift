@@ -22,25 +22,25 @@ public enum SpecialChar: Character {
     
     /// "\a" Bell
     case a_BL = "\u{07}"  
-
+    
     /// "\b" Backspace
     case b_BS = "\u{08}"  
-
+    
     /// "\t" Horizontal Tab
     case t_HT = "\u{09}"  
-
+    
     /// "\n" Line Feed / New Line
     case n_LF = "\u{0a}"  
-
+    
     /// "\v" Vertical Tab
     case v_VT = "\u{0b}"  
-
+    
     /// "\f" Form Feed / New Page
     case f_FF = "\u{0c}"  
-
+    
     /// "\r" Carriage Return
     case r_CR = "\u{0d}"  
-
+    
 }
 
 public extension SpecialChar {
@@ -97,7 +97,7 @@ public extension String {
         
         return res
     }
-        
+    
     /// eg:  hello "star"  =>  hello \"star\"
     var insertingBackslashForDoubleQuotes: String { 
         guard isNotEmpty else { return self }
@@ -181,7 +181,7 @@ struct DigitInfo {
 }
 
 extension DigitInfo {
-
+    
     init(initialValue: Int?) {
         guard let v = initialValue else { return }
         value = v
@@ -259,11 +259,11 @@ extension String.Iterator {
             
         case "\\", "\"", "'", "?":
             return (c, nil)
-
+            
         case "0"..."7":
             let info = detectUnicode(base: .Oct, initial: c.hexDigitValue)
             return info.unicodeChar(prePeep: [c])
-        
+            
         case "x":
             let info = detectUnicode(base: .Hex)
             return info.unicodeChar(prePeep: [c])
@@ -273,9 +273,9 @@ extension String.Iterator {
             if c2.isHexDigit {
                 let info = detectUnicode(base: .Hex, initial: c2.hexDigitValue)
                 return info.unicodeChar(prePeep: [c, c2])
-             } else if c2 == "{" {
-                 let info = detectUnicode(base: .Hex, expectedEnd: "}")
-                 return info.unicodeChar(prePeep: [c, c2])
+            } else if c2 == "{" {
+                let info = detectUnicode(base: .Hex, expectedEnd: "}")
+                return info.unicodeChar(prePeep: [c, c2])
             } else {
                 return (nil, [c, c2])
             }
