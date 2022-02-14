@@ -179,7 +179,7 @@ public func checkPairs(_ param: CmdParams) {
         guard !all.isEmpty else { print("    can't read files, or files has no strings ~ "); continue }
         
         // check missing file for languages
-        compareInOrders(langDirts, all, compareBy: { $0.compare($1.lan) }, bhsMissing: { print("    missing file for \($0)") })
+        compareInOrders(langDirts, all, compareBy: { $0.compare($1.lan) }, bsqMissing: { print("    missing file for \($0)") })
         
         guard 1 < all.count else { continue }
         let firstKeys = all.first!.pairs.keys

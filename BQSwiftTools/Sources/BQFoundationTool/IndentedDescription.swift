@@ -9,51 +9,62 @@ import Foundation
 
 
 public protocol IndentedDescription {
-    func description(indent spaces: String, prefix: String) -> String
+    /// To format pretty with indention and more deep levels
+    /// - Parameters:
+    ///   - deep:      for next level indention
+    ///   - indention: current indention
+    /// - Returns:     formatted description
+    func description(deep: String, indention: String) -> String
 }
 
 public extension IndentedDescription {
-    var indentedDescription: String { description(indent: "    ", prefix: "") }
+    /// Default deep with 4-spaces, no indention for top level.
+    var indentedDescription: String { description(deep: "    ", indention: "") }
 }
+
+
+
+
+// MARK: - default for Collection
 
 extension Array: IndentedDescription {
     
-    public func description(indent spaces: String, prefix: String) -> String {
+    public func description(deep: String, indention: String) -> String {
         let contents = map {
             let str: IndentedDescription = ($0 as? IndentedDescription) ?? "\($0)"
-            return str.description(indent: spaces, prefix: prefix + spaces)
+            return str.description(deep: deep, indention: indention + deep)
         }.joined(separator: String(.comma, .newline))
-        return "\(prefix)[\n\(contents)\n\(prefix)]"
+        return "\(indention)[\n\(contents)\n\(indention)]"
     }
 }
 
 extension Dictionary: IndentedDescription {
-    public func description(indent spaces: String, prefix: String) -> String {
-        let kPrf = prefix + spaces
+    public func description(deep: String, indention: String) -> String {
+        let kPrf = indention + deep
         let contents = map {
             let k: IndentedDescription = ($0.key as? IndentedDescription) ?? "\($0.key)"
             let v: IndentedDescription = ($0.value as? IndentedDescription) ?? "\($0.value)"
-            let ks = k.description(indent: spaces, prefix: kPrf)
-            var vs = v.description(indent: spaces, prefix: kPrf)
+            let ks = k.description(deep: deep, indention: kPrf)
+            var vs = v.description(deep: deep, indention: kPrf)
             vs.removeFirst(kPrf.count)
             return ks + " : " + vs
         }.sorted().joined(separator: String(.comma, .newline))
-        return "\(prefix){\n\(contents)\n\(prefix)}"
+        return "\(indention){\n\(contents)\n\(indention)}"
     }
 }
 
 extension Set: IndentedDescription {
-    public func description(indent spaces: String, prefix: String) -> String {
+    public func description(deep: String, indention: String) -> String {
         let contents = map {
             let str: IndentedDescription = ($0 as? IndentedDescription) ?? "\($0)"
-            return str.description(indent: spaces, prefix: prefix + spaces)
+            return str.description(deep: deep, indention: indention + deep)
         }.joined(separator: String(.comma, .newline))
-        return "\(prefix)[\n\(contents)\n\(prefix)]"
+        return "\(indention)[\n\(contents)\n\(indention)]"
     }
 }
 
 extension String: IndentedDescription {
-    public func description(indent spaces: String, prefix: String) -> String {
-        prefix + self
+    public func description(deep: String, indention: String) -> String {
+        indention + self
     }
 }

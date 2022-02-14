@@ -30,9 +30,9 @@ extension ClosedRange: BQEmpty {}
 
 public extension Error {
     
-    /// Returns  (self as NSError.code) == 0. 
-    ///  
-    /// for enum: NSError.code will be rawValue of Integer-type otherwise will be  enum declare-index. 
+    /// check as NSError, for code != 0
+    /// 
+    /// for enum: NSError.code will be rawValue of Integer-type otherwise will be  enum declare index. 
     /// 
     ///     enum ConnectResult: Int, Error, CaseIterable {
     ///        case failed = -101, crashed = -102, successed = 0, 
@@ -42,9 +42,12 @@ public extension Error {
     ///     }
     ///     
     /// otherwise (customed struct/class) NSError.code != 0
+    /// 
+    /// - Returns: (self as NSError).code == 0. 
+    /// 
     var isSuccessed: Bool  { (self as NSError).code == 0 }
     
-    /// Returns  ! isSuccessed
+    /// - Returns: ! isSuccessed
     var isFailed:    Bool  { !isSuccessed }
 }
 

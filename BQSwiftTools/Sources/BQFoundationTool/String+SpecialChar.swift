@@ -123,7 +123,7 @@ public extension String {
     /// "{insertingBackslashForDoubleQuotes}"
     var wrappingDoubleQuotes: String { DoubleQuote + insertingBackslashForDoubleQuotes + DoubleQuote }
     
-    /// trim endian doublequotes (if it has),  then return transformingEscapeCharacters
+    /// trim endian doublequotes (if it has, and not escaped),  then return transformingEscapeCharacters
     var trimingDoubleQuotes: String {
         switch count {
         case 0, 1:  return self
@@ -139,7 +139,7 @@ public extension String {
 }
 
 
-// MARK: - 
+// MARK: - internal auxiliary
 
 enum DigitBase {
     case Oct, Hex

@@ -13,24 +13,36 @@ import Foundation
 
 public extension String {
     
+    /// remove extension (include ".") if it has.
     var deletingExtension: String {
         guard let ext = fileExtension.notEmpty else { return self }
         let end = index(endIndex, offsetBy: -ext.count-1) // include "."
         return String(self[..<end])
     }
     
+    /// last path component
     var fileName: String { (self as NSString).lastPathComponent }
+    
+    /// fileName.deletingExtension
     var fileNameWithoutExt: String { fileName.deletingExtension }
+    
+    /// file extension ( such as "png", not including ".")
     var fileExtension: String { (self as NSString).pathExtension }
+    
+    /// parentDirectory.fileName
     var parentFileName: String { parentDirectory.fileName }
+    
+    /// remove last path component
     var parentDirectory: String { (self as NSString).deletingLastPathComponent }
     
+    /// appendingPathComponent (name)
     func appendingFileName(_ name: String) -> String { (self as NSString).appendingPathComponent(name) }
     
     var fileUrl: URL { URL(fileURLWithPath: self) }
 }
 
 public extension URL {
+    /// relativePath if is file url, otherwise return nil
     var filePath: String? { isFileURL ? relativePath : nil }
 }
 
@@ -77,6 +89,7 @@ public extension String {
 
 public extension Int {
     
+    /// xxx B/K/M/G
     var bytesSize: String {
         if      self < (1<<10) { return "\(round(shiftR: 0))B" }
         else if self < (1<<20) { return "\(round(shiftR:10))K" }
@@ -84,9 +97,9 @@ public extension Int {
         else                   { return "\(round(shiftR:30))G" }
     }
     
-    private func round(shiftR bitmask: Int) -> Int {
-        guard bitmask > 0 else { return self }
-        return ((self >> (bitmask-1)) + 1) >> 1 // 四舍五入
+    private func round(shiftR bits: Int) -> Int {
+        guard bits > 0 else { return self }
+        return ((self >> (bits-1)) + 1) >> 1 // 四舍五入
     }
 }
 

@@ -143,9 +143,9 @@ class BQFoundationToolTests: XCTestCase {
         } matching: { a, b in
             XCTAssertEqual(a, b)
             same.append(a)
-        } ahsMissing: { b in
+        } asqMissing: { b in
             missing1.append(b)
-        } bhsMissing: { a in
+        } bsqMissing: { a in
             missing2.append(a)
         }
         XCTAssertEqual(same, [1,3,6])
