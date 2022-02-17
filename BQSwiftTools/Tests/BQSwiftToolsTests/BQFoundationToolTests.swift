@@ -1,9 +1,3 @@
-//
-//  BQFoundationToolTests.swift
-//  
-//
-//  Created by Beiqi on 2022/1/26.
-//
 
 import XCTest
 @testable import BQFoundationTool

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreVideo
 
 
 public protocol FileEnm {
@@ -15,15 +16,17 @@ public protocol FileEnm {
 extension FileManager.DirectoryEnumerator: FileEnm { }
 
 public protocol FileItemHandler {
+    /// process current file item, in advance you can skipDescendants by fileEnm
     func handle(item: String, isDirectory: Bool, at path: String, fileEnm: FileEnm)
 }
 
 
 
 
-// MARK: - Concrete Handlers
+// MARK: - Concrete Handlers -
 
 
+/// transform handle-method into block
 public struct FileItemBlocker : FileItemHandler {
 
     public typealias FIBlock = (_ item: String, _ isDirectory: Bool, _ path: String, FileEnm) -> Void
@@ -38,9 +41,10 @@ public struct FileItemBlocker : FileItemHandler {
 }
 
 
+/// print current item (directory will ends with slash)
 public struct FileItemPrinter : FileItemHandler {
     
-    public var directoryFlag: String = "/"
+    public var directoryFlag = String(.slash)
     
     public func handle(item: String, isDirectory: Bool, at path: String, fileEnm: FileEnm) {
         print(isDirectory ? item + directoryFlag : item)
@@ -48,6 +52,7 @@ public struct FileItemPrinter : FileItemHandler {
 }
 
 
+/// read text-contents of current item, then pass it to self.didRead;  print error when failed.
 public struct FileItemTexter : FileItemHandler {
     
     public typealias FIDidRead = (_ content: String, _ file: URL) -> Void
@@ -63,6 +68,11 @@ public struct FileItemTexter : FileItemHandler {
 }
 
 
+
+
+// MARK: - Filter -
+
+/// filter file item then pass which filled the conditions to next handler.
 public class FileItemFilters: FileItemHandler {
     
     public typealias FilterFileOK = (_ item: String)->Bool
@@ -80,35 +90,42 @@ public class FileItemFilters: FileItemHandler {
     public func reverseFileFilters() -> Self { fileOKs.reverse(); return self }
     public func reverseDirtFilters() -> Self { dirtOKs.reverse(); return self }
 
+    public func isFilled(directory item: String, fileEnm: FileEnm) -> Bool {
+        for blk in dirtOKs {
+            if !blk(item, fileEnm) { return false }
+        }
+        return true
+    }
+    
+    public func isFilled(file item: String) -> Bool {
+        for blk in fileOKs {
+            if !blk(item) { return false }
+        }
+        return true
+    }
+    
     public func handle(item: String, isDirectory: Bool, at path: String, fileEnm: FileEnm) {
         guard let nextHandler = next else { 
             print("warning: FileItemFilters was not found next handler..."); return 
         }
-        let isOK = isDirectory
-            ? dirtOKs.reduce(true) { $0 && $1(item, fileEnm) }
-            : fileOKs.reduce(true) { $0 && $1(item) }
-        guard isOK else { return }
+        guard isDirectory ? isFilled(directory: item, fileEnm: fileEnm)
+                : isFilled(file: item) else { return }
         nextHandler.handle(item: item, isDirectory: isDirectory, at: path, fileEnm: fileEnm)
     }
-    
 }
-
-
-
-
-// MARK: - Tools
 
 public extension FileItemFilters {
     
     typealias FileMatched = (_ item: String) -> Bool
     
 
+    func fill(dirs: [String]) -> Self { fill(dirs: dirs.fileNameMatching()) }
     func fill(dirs mt: @escaping FileMatched) -> Self {
         dirtOKs.append { crt, _ in mt(crt) }
         return self
     }
-    func fill(dirs: [String]) -> Self { fill(dirs: dirs.fileNameMatching()) }
     
+    func ignore(dirs: [String]) -> Self { ignore(dirs: dirs.fileNameMatching()) } 
     func ignore(dirs mt: @escaping FileMatched) -> Self {
         dirtOKs.append { crt, enm in 
             guard mt(crt) else { return true }
@@ -117,7 +134,6 @@ public extension FileItemFilters {
         }
         return self
     }
-    func ignore(dirs: [String]) -> Self { ignore(dirs: dirs.fileNameMatching()) } 
     
     func onlyDirs() -> Self {
         fileOKs.append { _ in false }
@@ -125,17 +141,19 @@ public extension FileItemFilters {
     }
 
     
+    
+    
+    func fill(files: [String]) -> Self { fill(files: files.fileNameMatching()) }
     func fill(files mt: @escaping FileMatched) -> Self {
         fileOKs.append { mt($0) }
         return self
     }
-    func fill(files: [String]) -> Self { fill(files: files.fileNameMatching()) }
 
+    func ignore(files: [String]) -> Self { ignore(files: files.fileNameMatching()) } 
     func ignore(files mt: @escaping FileMatched) -> Self {
         fileOKs.append { !mt($0) }
         return self
     }
-    func ignore(files: [String]) -> Self { ignore(files: files.fileNameMatching()) } 
 
     func onlyFiles() -> Self {
         dirtOKs.append { _, _ in false }
@@ -145,14 +163,15 @@ public extension FileItemFilters {
     func ignoreHiddenFiles() -> Self {
         let skip: FileMatched = { $0.fileName.hasPrefix(".") }
         dirtOKs.append { item, enm in
-            let sk = skip(item)
-            if sk { enm.skipDescendants() }
-            return !sk
+            guard skip(item) else { return true }
+            enm.skipDescendants()
+            return false
         }
         fileOKs.append { !skip($0) }
         return self
     }
 }
+
 
 public extension FileItemHandler {
     
@@ -168,6 +187,8 @@ public extension FileItemHandler {
 
 
 
+// MARK: - matching tools -
+
 public enum SubstringPosition {
     
     case prefix, any, suffix
@@ -180,6 +201,7 @@ public enum SubstringPosition {
         }
     }
 }
+
 
 fileprivate extension Bool {
     var fileNameGetter: (String)->String { self ? \.fileNameWithoutExt : \.fileName }

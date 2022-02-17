@@ -8,16 +8,90 @@
 import Foundation
 import BQFoundationTool
 
+/// localized string action
 public enum Action: String, CaseIterable {
+    
+    /// merge 2 inputing-files into 1 file, formatted by mapping two lines in order. 
+    /// (Lines will be removed which is empty after trimming white-spaces).
+    /// 
+    ///     -- file1 --   &  -- file2 --  =>   ---- output ---- 
+    ///     key0             value0            "key0" = "value0";
+    ///     key1             value1            "key1" = "value1";
+    ///     key2             value2            "key2" = "value2";
+    ///     ...              ...               ...
     case mergePairs
+
+    /// check strings-file for repeated/missing keys and difference between languages.
+    ///
+    ///     -l, --languages [optional]
     case checkPairs
+
+    /// collect matched strings (default is for double-quoted), and save to outputs.
+    /// 
+    ///     -l, --languages  [optional]
+    ///     --exts      [optional, strings]
+    ///     --patterns  [optional, prefix...suffix] 
+    ///     --ellipsis  [optional, for patterns]
+    ///     --keyPaths  [optional, for xib-files]
     case collectStrings
+
+    /// replace values in xxx.strings with translated-values in translatedFiles, mapping with the same values.
+    /// 
+    ///     -l, --languages
+    ///     -t, --translatedFiles
+    ///     -T, --TranslatedFilesRegExp
     case replaceStrings
+
+    /// localize strings in code-files. for example: "xx" will be "xx".localized; but "xx".localized keep the same
+    /// 
+    ///     --exts      [optional, eg: strings]
+    ///     --property  [optional, localized property name, eg: localized]
     case localizeCodes
+
 }
 
+/// optional param key
 public enum ParamKey: String {
-    case exts, languages, patterns, ellipsis, keyPaths, property, translatedFiles, TranslatedFilesRegExp
+
+    /// --exts
+    /// 
+    /// file extensions, eg: swift,m,cpp (default is swift)
+    case exts
+    
+    /// -l, --languages
+    /// 
+    /// localized languages (Xcode project created xxx.lproj directories, such as: en,id).
+    case languages
+    
+    /// --patterns
+    /// 
+    /// search middle contents of ellipsis-place (prefix...suffix).  eg: "...",'...'
+    case patterns
+    
+    /// --ellipsis
+    /// 
+    /// default: ...
+    case ellipsis
+    
+    /// --keyPaths
+    /// 
+    /// only value for keyPath (in xib-files). eg: vcTitle,joinedTitles
+    case keyPaths
+    
+    /// --property
+    /// 
+    /// localized property name that implemented with code, eg: localized (which is default value)
+    case property
+    
+    /// -t, --translatedFiles
+    /// 
+    /// Which contents should be formated by key-value pairs.
+    case translatedFiles
+    
+    /// -T, --TranslatedFilesRegExp
+    /// 
+    /// Which contents should be formated by key-value pairs.
+    case TranslatedFilesRegExp
 }
 
 public extension Action {
@@ -109,7 +183,6 @@ public func mainFunc(_ param: CmdParams) {
 
 
 public func mergePairs(_ param: CmdParams) {
-    var repeatN: Int = 0
     var tmpKeys: [String]?
     let txter = FileItemTexter { content, file in
         let lines = content.allValidLines
@@ -123,8 +196,8 @@ public func mergePairs(_ param: CmdParams) {
                 print("conflict value (%@), (%@) for key (%@)", v, lines[i], keys[i])
             }
         }
-        let path = param.output(fileName: "mergingPairs.txt", repeat: repeatN)
-        dic.sortedPairStrings.writeSafely(toFile: path); repeatN += 1; tmpKeys = nil
+        let path = param.outputFile(expected: "mergingPairs.txt", overwrite: false)
+        dic.sortedPairStrings.writeSafely(toFile: path); tmpKeys = nil
         guard keys.count != lines.count else { return }
         let mores = minCount < keys.count ? keys[minCount...] : lines[minCount...]
         print("could not pair for : \(mores)")
@@ -279,7 +352,7 @@ func collectStringsForStringsFile(_ param: CmdParams, patterns: [PairTokenObj]?)
             .only(file: .strings)
         param.searchFiles(with: filter)
         
-        let outPath = param.output(fileName: "all_strings.txt", suffix: "_" + lan)
+        let outPath = param.outputFile(expected: "all_strings_\(lan).txt")
         allValues.sortedLines.writeSafely(toFile: outPath)
         print("total \(allValues.count) strings")
     }
@@ -300,7 +373,7 @@ func collectStringsForXibFile(_ param: CmdParams, patterns: [PairTokenObj]?) {
     }
     param.searchFiles(with: texter.filter.onlyCodeResFiles().only(file: .xib))
 
-    let outPath = param.output(fileName: "all_values_xib.txt", suffix: "")
+    let outPath = param.outputFile(expected: "all_values_xib.txt")
     allValues.sortedLines.writeSafely(toFile: outPath)
     print("total \(allValues.count) strings")
 }
@@ -317,7 +390,7 @@ func collectStringsForOthersFile(_ param: CmdParams, patterns: [PairTokenObj]?, 
     }
     param.searchFiles(with: texter.filter.onlyCodeResFiles().onlyFiles().fill(files: exts.fileExtMatching()))
 
-    let outPath = param.output(fileName: "all_searched.txt", suffix: "")
+    let outPath = param.outputFile(expected: "all_searched.txt")
     allValues.sortedLines.writeSafely(toFile: outPath)
     print("total \(allValues.count) strings")
 }
@@ -377,22 +450,22 @@ extension CmdParams {
     
     func searchFiles(with filters: FileItemFilters) {
         if let allFiles = files, !allFiles.isEmpty {
-            filters.startWorking(atDirectory: defaultPath, files: allFiles)
+            filters.startWorking(atDirectory: inputPath, files: allFiles)
         } else if let regFiles = FilesRegExp {
             do {
                 let match = try regFiles.fileNameRegExpMatching()
                 let _ = filters.fill(files: match)
-                filters.startWorking(atDirectory: defaultPath)
+                filters.startWorking(atDirectory: inputPath)
             } catch {
                 print("failed to analyze regular expression: \(error)")
             }
         } else {
-            filters.startWorking(atDirectory: defaultPath)
+            filters.startWorking(atDirectory: inputPath)
         }
     }
     
     func searchLanguages() -> Set<String> {
-        XcodeProjLanguages().find(at: defaultPath)
+        XcodeProjLanguages().find(at: inputPath)
     }
     
     

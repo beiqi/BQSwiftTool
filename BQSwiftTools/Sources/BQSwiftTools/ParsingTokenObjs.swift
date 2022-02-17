@@ -23,7 +23,7 @@ public extension ComparableTexts {
 
 
 
-// MARK: - TokenObj
+// MARK: -
 
 public class TokenObj {
     public let text: String
@@ -99,7 +99,7 @@ extension TokenObj: ComparableTexts {
 
 
 
-// MARK: - BackslashObj
+// MARK: - 
 
 public class BackslashObj {
     public var label = "backslash"
@@ -173,9 +173,8 @@ extension BackslashObj: ComparableTexts {
 
 
 
-// MARK: - PairTokenObj
-// 为简化处理，excludingObj与rightObj会开启同步匹配，如果excludingObj先匹配成功，则rightObj重置；如果rightObj先匹配成功，将忽略excludingObj, 即PairTokenObj匹配成功。
-
+// MARK: - 
+/// 为简化处理，excludingObj与rightObj会开启同步匹配，如果excludingObj先匹配成功，则rightObj重置；如果rightObj先匹配成功，将忽略excludingObj, 即PairTokenObj匹配成功。
 public class PairTokenObj {
     let label: String
     let leftObj:  TokenObj
