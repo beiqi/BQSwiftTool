@@ -24,12 +24,16 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "BQFoundationTool",
-            dependencies: []),
+            dependencies: []
+        ),
         .target(
             name: "BQSwiftTools",
-            dependencies: ["BQFoundationTool"]),
+            dependencies: ["BQFoundationTool"]
+        ),
         .testTarget(
             name: "BQSwiftToolsTests",
-            dependencies: ["BQSwiftTools"]),
+            dependencies: ["BQSwiftTools"],
+            resources: [.copy("directs.txt")]
+        ),
     ]
 )
