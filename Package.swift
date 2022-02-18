@@ -1,1 +1,0 @@
-./BQSwiftTools/Package.swift
